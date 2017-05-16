@@ -13,10 +13,9 @@ from functools import wraps
 from pathlib import Path
 from typing import Generator, List, Union
 
-from facebookads.api import FacebookAdsApi, FacebookRequestError
-from facebookads.objects import AdUser, AdAccount, Insights
-
 from facebook_downloader import config
+from facebookads.adobjects import user, adaccount, adsinsights
+from facebookads.api import FacebookAdsApi, FacebookRequestError
 
 OUTPUT_FILE_VERSION = 'v1'
 
@@ -32,7 +31,7 @@ def download_data():
     download_data_sets(ad_accounts)
 
 
-def download_data_sets(ad_accounts: [AdAccount]):
+def download_data_sets(ad_accounts: [adaccount.AdAccount]):
     """Downloads the account structure and ad performance data sets for all ad accounts
 
     Args:
@@ -43,7 +42,7 @@ def download_data_sets(ad_accounts: [AdAccount]):
     download_ad_performance(ad_accounts)
 
 
-def download_account_structure(ad_accounts: [AdAccount]):
+def download_account_structure(ad_accounts: [adaccount.AdAccount]):
     """Downloads the Facebook Ads account structure to a csv.
 
     Args:
@@ -75,7 +74,7 @@ def download_account_structure(ad_accounts: [AdAccount]):
         shutil.move(str(tmp_filepath), str(filepath))
 
 
-def download_ad_performance(ad_accounts: [AdAccount]):
+def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
     """Download the Facebook ad performance and upserts them
     into a sqlite database per account and day
 
@@ -107,7 +106,8 @@ def download_ad_performance(ad_accounts: [AdAccount]):
             current_date -= datetime.timedelta(days=1)
 
 
-def download_account_structure_per_account(ad_account: AdAccount) -> Generator[List, None, None]:
+def download_account_structure_per_account(ad_account: adaccount.AdAccount) \
+        -> Generator[List, None, None]:
     """Downloads the Facebook Ads account structure for a specific account
     and transforms them to flat rows per ad
 
@@ -181,7 +181,7 @@ def rate_limiting(func):
 
 
 @rate_limiting
-def get_ad_data(ad_account: AdAccount) -> {}:
+def get_ad_data(ad_account: adaccount.AdAccount) -> {}:
     """Retrieves the ad data of the ad account as a dictionary
 
     Args:
@@ -211,7 +211,7 @@ def get_ad_data(ad_account: AdAccount) -> {}:
 
 
 @rate_limiting
-def get_ad_set_data(ad_account: AdAccount) -> {}:
+def get_ad_set_data(ad_account: adaccount.AdAccount) -> {}:
     """Retrieves the ad set data of the ad account as a dictionary
 
     Args:
@@ -244,7 +244,7 @@ def get_ad_set_data(ad_account: AdAccount) -> {}:
 
 
 @rate_limiting
-def get_campaign_data(ad_account: AdAccount) -> {}:
+def get_campaign_data(ad_account: adaccount.AdAccount) -> {}:
     """Retrieves the campaign data of the ad account as a dictionary
 
     Args:
@@ -273,8 +273,8 @@ def get_campaign_data(ad_account: AdAccount) -> {}:
 
 
 @rate_limiting
-def get_account_ad_performance_for_single_day(ad_account: AdAccount,
-                                              single_date: datetime) -> Insights:
+def get_account_ad_performance_for_single_day(ad_account: adaccount.AdAccount,
+                                              single_date: datetime) -> adsinsights.AdsInsights:
     """Downloads the ad performance for an ad account for a given day
     https://developers.facebook.com/docs/marketing-api/insights
 
@@ -303,8 +303,7 @@ def get_account_ad_performance_for_single_day(ad_account: AdAccount,
                 # https://developers.facebook.com/docs/marketing-api/insights/action-breakdowns
                 'action_breakdowns': ['action_type'],
                 # https://developers.facebook.com/docs/marketing-api/insights/breakdowns
-                'breakdowns': ['impression_device',
-                               'placement'],
+                'breakdowns': ['impression_device'],
                 'level': 'ad',
                 'limit': 1000,
                 'time_range': {'since': single_date.strftime('%Y-%m-%d'),
@@ -363,7 +362,7 @@ def parse_labels(labels: [{}]) -> {str: str}:
 
 
 @rate_limiting
-def _get_ad_accounts() -> [AdAccount]:
+def _get_ad_accounts() -> [adaccount.AdAccount]:
     """Retrieves the ad accounts of the user whose access token was provided and
     returns them as a list.
 
@@ -371,7 +370,7 @@ def _get_ad_accounts() -> [AdAccount]:
         A list of ad accounts
 
     """
-    system_user = AdUser(fbid='me')
+    system_user = user.User(fbid='me')
     ad_accounts = system_user.get_ad_accounts(fields=['account_id',
                                                       'name',
                                                       'created_time',
@@ -379,7 +378,7 @@ def _get_ad_accounts() -> [AdAccount]:
     return list(ad_accounts)
 
 
-def _upsert_ad_performance(ad_insights: [Insights], con: sqlite3.Connection):
+def _upsert_ad_performance(ad_insights: [adsinsights.AdsInsights], con: sqlite3.Connection):
     """Creates the ad performance table if it does not exists and upserts the
     ad insights data afterwards
 
@@ -393,15 +392,14 @@ CREATE TABLE IF NOT EXISTS ad_performance (
   date          DATE   NOT NULL,
   ad_id         BIGINT NOT NULL,
   device        TEXT   NOT NULL,
-  placement     TEXT   NOT NULL,
   performance   TEXT   NOT NULL,
-  PRIMARY KEY (ad_id, device, placement)
+  PRIMARY KEY (ad_id, device)
 );""")
-    con.executemany("INSERT OR REPLACE INTO ad_performance VALUES (?,?,?,?,?)",
+    con.executemany("INSERT OR REPLACE INTO ad_performance VALUES (?,?,?,?)",
                     _to_insight_row_tuples(ad_insights))
 
 
-def _to_insight_row_tuples(ad_insights: [Insights]) -> Generator[tuple, None, None]:
+def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[tuple, None, None]:
     """Transforms the Insights objects into tuples that can be directly inserted
     into the ad_performance table
 
@@ -427,7 +425,6 @@ def _to_insight_row_tuples(ad_insights: [Insights]) -> Generator[tuple, None, No
         ad_insight_tuple = (ad_insight['date_start'],
                             ad_insight['ad_id'],
                             ad_insight['impression_device'],
-                            ad_insight['placement'],
                             json.dumps(performance))
 
         yield ad_insight_tuple
@@ -444,7 +441,7 @@ def _floatify_values(inp: {}) -> {}:
     return {key: _floatify(value) for key, value in inp.items()}
 
 
-def _first_download_date_of_ad_account(ad_account: AdAccount) -> datetime.date:
+def _first_download_date_of_ad_account(ad_account: adaccount.AdAccount) -> datetime.date:
     """Finds the first date for which the ad account's performance should be
     downloaded by comparing the first download date from the configuration and
     the creation date of the account and returning the maximum of the two.
