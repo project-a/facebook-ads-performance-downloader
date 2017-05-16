@@ -99,7 +99,7 @@ def download_ad_performance(ad_accounts: [AdAccount]):
                              account_id=ad_account['account_id'])))
 
             if (not db_name.is_file()
-                    or (last_date - current_date).days <= int(config.redownload_window())):
+                or (last_date - current_date).days <= int(config.redownload_window())):
                 ad_insights = get_account_ad_performance_for_single_day(ad_account,
                                                                         current_date)
                 with sqlite3.connect(str(db_name)) as con:
@@ -456,8 +456,11 @@ def _first_download_date_of_ad_account(ad_account: AdAccount) -> datetime.date:
         The first date to download the performance data for
 
     """
-    account_created_date = datetime.datetime.strptime(ad_account['created_time'],
-                                                      "%Y-%m-%dT%H:%M:%S%z").date()
     config_first_date = datetime.datetime.strptime(config.first_date(),
                                                    '%Y-%m-%d').date()
-    return max(config_first_date, account_created_date)
+    if 'created_time' in ad_account:
+        account_created_date = datetime.datetime.strptime(ad_account['created_time'],
+                                                          "%Y-%m-%dT%H:%M:%S%z").date()
+        return max(config_first_date, account_created_date)
+    else:
+        return config_first_date
