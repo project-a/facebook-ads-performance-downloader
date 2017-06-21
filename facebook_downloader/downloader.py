@@ -307,7 +307,20 @@ def get_account_ad_performance_for_single_day(ad_account: adaccount.AdAccount,
                 'level': 'ad',
                 'limit': 1000,
                 'time_range': {'since': single_date.strftime('%Y-%m-%d'),
-                               'until': single_date.strftime('%Y-%m-%d')}})
+                               'until': single_date.strftime('%Y-%m-%d')},
+                # By default only ACTIVE campaigns get considered.
+                'filtering': [{
+                    'field': 'ad.effective_status',
+                    'operator': 'IN',
+                    'value': ['ACTIVE',
+                              'PAUSED',
+                              'PENDING_REVIEW',
+                              'DISAPPROVED',
+                              'PREAPPROVED',
+                              'PENDING_BILLING_INFO',
+                              'CAMPAIGN_PAUSED',
+                              'ARCHIVED',
+                              'ADSET_PAUSED']}]})
 
     return ad_insights
 
