@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+*2017-06-21*
+
+- Download performance data for ads in all states except deleted ones
+
 ## 1.1.1
 *2017-06-10*
 
