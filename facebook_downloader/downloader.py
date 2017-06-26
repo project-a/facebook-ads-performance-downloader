@@ -424,10 +424,10 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
 
     """
     for ad_insight in ad_insights:
-        actions = ad_insight.get('actions', [])
+        actions = ad_insight.get('actions') or []
         actions = [_floatify_values(action) for action in actions]
 
-        action_values = ad_insight.get('action_values', [])
+        action_values = ad_insight.get('action_values') or []
         action_values = [_floatify_values(action_value) for action_value in action_values]
 
         performance = {'impressions': int(ad_insight['impressions']),
