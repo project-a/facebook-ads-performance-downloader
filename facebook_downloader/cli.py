@@ -25,6 +25,7 @@ def apply_options(kwargs):
 @config_option(config.app_id)
 @config_option(config.app_secret)
 @config_option(config.access_token)
+@config_option(config.account_id)
 @config_option(config.data_dir)
 @config_option(config.first_date)
 @config_option(config.redownload_window)

@@ -42,3 +42,8 @@ def access_token() -> str:
 def redownload_window() -> str:
     """The number of days for which the performance data will be redownloaded"""
     return '28'
+
+
+def account_id() -> str:
+    """Facebook account id for which we are requesting the data"""
+    return 'me'
