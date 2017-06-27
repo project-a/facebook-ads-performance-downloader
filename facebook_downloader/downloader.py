@@ -383,7 +383,7 @@ def _get_ad_accounts() -> [adaccount.AdAccount]:
         A list of ad accounts
 
     """
-    system_user = user.User(fbid='me')
+    system_user = user.User(fbid=config.account_id)
     ad_accounts = system_user.get_ad_accounts(fields=['account_id',
                                                       'name',
                                                       'created_time',
