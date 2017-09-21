@@ -108,3 +108,38 @@ To run the Facebook Ads Performance Downloader call `download-facebook-performan
     --app_secret ABCDEFEGHIJKL \
     --access_token aBcDeFgHiJkLmNoPqRsTuVwXyZ \
     --data_dir /tmp/facebook
+
+For all options, see 
+
+    $ download-facebook-performance-data --help
+    Usage: download-facebook-performance-data [OPTIONS]
+    
+      Downloads data. When options are not specified, then the defaults from
+      config.py are used.
+    
+    Options:
+      --app_id TEXT             The app id obtained from the app's settings in
+                                facebook for developers
+                                
+                                https://developers.facebo
+                                ok.com/apps/<APP_ID>/settings/. Example:
+                                "1234567890"
+      --app_secret TEXT         The app secret obtained from the app's settings in
+                                facebook for developers
+                                
+                                https://developers.facebo
+                                ok.com/apps/<APP_ID>/settings/. Example: "aBcDeFg"
+      --access_token TEXT       The access token of the system user with the
+                                following credentials:
+                                - read_insights
+                                - ads_read
+                                https://business.facebook.com/settings/system-
+                                users/<SYSTEM_USER_ID>?business_id=<BUSINESS_ID>.
+                                Example: "foo"
+      --data_dir TEXT           The directory where result data is written to.
+                                Example: "/tmp/facebook_ads"
+      --first_date TEXT         The first day for which data is downloaded.
+                                Example: "2015-01-01"
+      --redownload_window TEXT  The number of days for which the performance data
+                                will be redownloaded. Example: "28"
+      --help                    Show this message and exit.
