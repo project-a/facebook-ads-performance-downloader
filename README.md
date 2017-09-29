@@ -1,6 +1,6 @@
 # Facebook Ads Performance Downloader
 
-A Python script for downloading structure and performance data from ad accounts in a single [business manager](https://developers.facebook.com/docs/apps/business-manager) using the Facebook Ads API ([v2.9](https://developers.facebook.com/docs/marketing-api/reference/v2.9)) to local files. 
+A Python script for downloading structure and performance data from ad accounts in a single [business manager](https://developers.facebook.com/docs/apps/business-manager) using the Facebook Ads API ([v2.10](https://developers.facebook.com/docs/marketing-api/reference/v2.10)) to local files. 
 
 ## Resulting data
 By default, it creates two data sets:
@@ -72,7 +72,7 @@ Optionally, you can apply labels on all hierarchy levels for segmenting the stru
  The Facebook Ads Performance Downloader requires:
 
     Python (>= 3.5)
-    facebookads (==2.9.2)
+    facebookads (==2.10.1)
     click (>=6.0)
 
 The easiest way to install facebook-ads-downloader is using pip
