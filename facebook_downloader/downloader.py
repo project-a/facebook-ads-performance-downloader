@@ -87,7 +87,8 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
         ad_accounts: A list of all ad accounts to download.
 
     """
-    for ad_account in ad_accounts:
+    for account_index, ad_account in enumerate(ad_accounts):
+        logging.info('Downloading data for account %s (account %d of %d)', ad_account['account_id'], account_index, len(ad_accounts))
         # calculate yesterday based on the timezone of the ad account
         ad_account_timezone = datetime.timezone(datetime.timedelta(
             hours=float(ad_account['timezone_offset_hours_utc'])))
