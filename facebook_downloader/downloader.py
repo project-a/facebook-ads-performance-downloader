@@ -28,6 +28,11 @@ def download_data():
                         config.app_secret(),
                         config.access_token())
     ad_accounts = _get_ad_accounts()
+    target_accounts = list(filter(None, config.target_accounts().split(',')))
+    if len(target_accounts) > 0:
+        logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s', len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
+        ad_accounts = [ad_account for ad_account in ad_accounts if ad_account['account_id'] in config.target_accounts()]
+        logging.info('after filtering %s accounts will be downloaded: %s', len(ad_accounts), ', '.join(ad_accounts))
     download_data_sets(ad_accounts)
 
 
@@ -82,7 +87,8 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
         ad_accounts: A list of all ad accounts to download.
 
     """
-    for ad_account in ad_accounts:
+    for account_index, ad_account in enumerate(ad_accounts):
+        logging.info('Downloading data for account %s (account %d of %d)', ad_account['account_id'], account_index, len(ad_accounts))
         # calculate yesterday based on the timezone of the ad account
         ad_account_timezone = datetime.timezone(datetime.timedelta(
             hours=float(ad_account['timezone_offset_hours_utc'])))

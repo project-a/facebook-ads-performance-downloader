@@ -100,6 +100,8 @@ Select the app you want to use to download the data, activate the `read_insights
 The generated `access_token` is then shown to you:
 ![Facebook System User Access Token](docs/facebook-system-user-access-token.png)
 
+Currently Facebook requires you to perform a number of successful API calls before being able to access more than 5 accounts. If that's the case use the `target_accounts` parameter to specify these 5 accounts and avoid API errors.
+
 ## Usage
 
 To run the Facebook Ads Performance Downloader call `download-facebook-performance-data` with its config parameters:  
@@ -142,4 +144,8 @@ For all options, see
                                 Example: "2015-01-01"
       --redownload_window TEXT  The number of days for which the performance data
                                 will be redownloaded. Example: "28"
+      --target_accounts TEXT    The accounts to download, comma separated, if not
+                                set or empty each available account will be tried.
+                                Example: ""
+
       --help                    Show this message and exit.
