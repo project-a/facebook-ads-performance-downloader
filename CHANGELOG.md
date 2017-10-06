@@ -4,7 +4,7 @@
 *2017-10-05*
 
 - Add the `target_accounts` parameter to optionally limit the accounts to download
-
+- Updated `facebookads` to 2.10.1`
 
 ## 1.2.0
 *2017-09-21*
