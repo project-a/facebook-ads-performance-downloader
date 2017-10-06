@@ -43,6 +43,7 @@ def redownload_window() -> str:
     """The number of days for which the performance data will be redownloaded"""
     return '28'
 
+
 def target_accounts() -> str:
     """The accounts to download, comma separated, if empty each available account will be tried"""
     return ''
