@@ -30,9 +30,9 @@ def download_data():
     ad_accounts = _get_ad_accounts()
     target_accounts = list(filter(None, config.target_accounts().split(',')))
     if len(target_accounts) > 0:
-        logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s' , len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
+        logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s', len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
         ad_accounts = [ad_account for ad_account in ad_accounts if ad_account['account_id'] in config.target_accounts()]
-        logging.info('after filtering {} accounts will be downloaded'.format(len(ad_accounts)))
+        logging.info('after filtering %s accounts will be downloaded: %s', len(ad_accounts), ', '.join(ad_accounts))
     download_data_sets(ad_accounts)
 
 
