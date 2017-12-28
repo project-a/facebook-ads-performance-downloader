@@ -32,7 +32,7 @@ def download_data():
     if len(target_accounts) > 0:
         logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s', len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
         ad_accounts = [ad_account for ad_account in ad_accounts if ad_account['account_id'] in config.target_accounts()]
-        logging.info('after filtering %s accounts will be downloaded: %s', len(ad_accounts), ', '.join(ad_accounts))
+        logging.info('after filtering %s accounts will be downloaded: %s', len(target_accounts), ', '.join(target_accounts))
     download_data_sets(ad_accounts)
 
 
@@ -436,8 +436,11 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
         action_values = ad_insight.get('action_values') or []
         action_values = [_floatify_values(action_value) for action_value in action_values]
 
-        performance = {'impressions': int(ad_insight['impressions']),
-                       'spend': float(ad_insight['spend']),
+        impressions = ad_insight.get('impressions') or 0
+        spend = ad_insight.get('spend') or 0.0
+
+        performance = {'impressions': int(impressions),
+                       'spend': float(spend),
                        'actions': actions,
                        'action_values': action_values}
 

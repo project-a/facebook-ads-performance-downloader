@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+*2017-12-28*
+
+- Updated `facebookads` to 2.11.1`
+- catch not existing impressions and spend
+- small bug fix for logging with target accounts 
+
 ## 1.3.0
 *2017-10-05*
 
