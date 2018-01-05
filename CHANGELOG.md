@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+2018-01-05
+
+- Insert unknown device if device is empty
+
 ## 1.4.0
 *2017-12-28*
 

@@ -446,7 +446,7 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
 
         ad_insight_tuple = (ad_insight['date_start'],
                             ad_insight['ad_id'],
-                            ad_insight['impression_device'],
+			    ad_insight.get('impression_device') or 'Unknown',
                             json.dumps(performance))
 
         yield ad_insight_tuple
