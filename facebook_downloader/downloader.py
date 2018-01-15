@@ -1,13 +1,9 @@
-import csv
 import datetime
 import errno
-import gzip
 import json
 import logging
 import re
-import shutil
 import sqlite3
-import tempfile
 import time
 from functools import wraps
 from pathlib import Path
@@ -54,29 +50,38 @@ def download_account_structure(ad_accounts: [adaccount.AdAccount]):
         ad_accounts: A list of all ad accounts to download.
 
     """
-    filename = Path('facebook-account-structure_{}.csv.gz'.format(OUTPUT_FILE_VERSION))
-    filepath = ensure_data_directory(filename)
+    db_name = Path('facebook-account-structure_{}.sqlite3'.format(OUTPUT_FILE_VERSION))
+    filepath = ensure_data_directory(db_name)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_filepath = Path(tmp_dir, filename)
-        with gzip.open(str(tmp_filepath), 'wt') as tmp_account_structure_file:
-            header = ['Ad Id',
-                      'Ad',
-                      'Ad Set Id',
-                      'Ad Set',
-                      'Campaign Id',
-                      'Campaign',
-                      'Account Id',
-                      'Account',
-                      'Attributes']
-            writer = csv.writer(tmp_account_structure_file, delimiter="\t")
-            writer.writerow(header)
+    with sqlite3.connect(str(filepath)) as con:
+        for ad_account in ad_accounts:
+            for row in download_account_structure_per_account(ad_account):
+                _upsert_account_structure(row, con)
 
-            for ad_account in ad_accounts:
-                for row in download_account_structure_per_account(ad_account):
-                    writer.writerow(row)
+def _upsert_account_structure(campaign_data, con: sqlite3.Connection):
+    """Creates the campaign performance table if it does not exists and upserts the
+    campaign data afterwards
 
-        shutil.move(str(tmp_filepath), str(filepath))
+    Args:
+        campaign_data: A list of campaign information objects
+        con: A sqlite database connection
+
+    """
+    con.execute("""
+CREATE TABLE IF NOT EXISTS account_structure (
+  ad_id       BIGINT   NOT NULL,
+  ad          TEXT NOT NULL,
+  ad_set_id   BIGINT   NOT NULL,
+  ad_set      TEXT NOT NULL,
+  campaign_id BIGINT   NOT NULL,
+  campaign    TEXT NOT NULL,
+  account_id  BIGINT   NOT NULL,
+  account     TEXT NOT NULL,
+  attributes  JSON,
+  PRIMARY KEY (ad_id)
+);""")
+    con.execute("INSERT OR REPLACE INTO account_structure VALUES (?,?,?,?,?,?,?,?,?)",
+                   campaign_data)
 
 
 def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
