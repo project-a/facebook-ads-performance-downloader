@@ -33,11 +33,11 @@ By default, it creates two data sets:
                     
     See [Insights Fields](https://developers.facebook.com/docs/marketing-api/insights/fields) for a documentation of the fields.
     
-2. **Account Structure** information. This file is always overwritten by the script:
+2. **Account Structure** information. This sqlite3 database containes one table `account_structure` which is always upserted by the script:
 
-        data/facebook-account-structure_v1.csv.gz
+        data/facebook-account-structure_v1.sqlite3
 
-    Each line contains one ad together with its ad group, campaign and account:
+    Each rows contains one ad together with its ad group, campaign and account:
     
         ad_id         | 1234567890
         ad_name       | Foo
