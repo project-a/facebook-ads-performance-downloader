@@ -377,7 +377,7 @@ def parse_labels(labels: [{}]) -> {str: str}:
     """
     labels_dict = {}
     for label in labels:
-        match = re.search("{([a-zA-Z|_]+)=([a-zA-Z|_]+)}", label['name'])
+        match = re.search("{([^=]+)=(.+)}", label['name'])
         if match:
             key = match.group(1).strip().lower().title()
             value = match.group(2).strip()

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2
+2018-03-20
+
+- allow more characters in labels
+
 ## 1.4.1
 2018-01-05
 
