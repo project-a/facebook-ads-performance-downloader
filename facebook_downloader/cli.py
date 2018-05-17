@@ -1,5 +1,6 @@
 """Command line interface for facebook downloader"""
 
+import logging
 from functools import partial
 
 import click
@@ -35,4 +36,5 @@ def download_data(**kwargs):
     When options are not specified, then the defaults from config.py are used.
     """
     apply_options(kwargs)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     downloader.download_data()

@@ -18,8 +18,6 @@ OUTPUT_FILE_VERSION = 'v1'
 
 def download_data():
     """Initializes the FacebookAdsAPI, retrieves the ad accounts and downloads the data"""
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     FacebookAdsApi.init(config.app_id(),
                         config.app_secret(),
                         config.access_token())
