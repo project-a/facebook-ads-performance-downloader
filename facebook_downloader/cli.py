@@ -4,7 +4,7 @@ import logging
 from functools import partial
 
 import click
-from facebook_downloader import config, downloader
+from facebook_downloader import config
 
 
 def config_option(config_function):
@@ -33,6 +33,8 @@ def download_data(**kwargs):
     Downloads data.
     When options are not specified, then the defaults from config.py are used.
     """
+    from facebook_downloader import downloader
+
     apply_options(kwargs)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     downloader.download_data()
