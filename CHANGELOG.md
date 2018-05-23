@@ -1,13 +1,14 @@
 # Changelog
 
 
-## 1.4.0 - 1.4.2 (2017-12-28)
+## 1.4.0 - 1.4.3 (2017-12-28)
 
 - Updated `facebookads` to 2.11.1`
 - catch not existing impressions and spend
 - small bug fix for logging with target accounts 
 - Insert unknown device if device is empty
 - allow more characters in labels
+- Handle 'unknown error' by retrying on all FacebookRequestError exceptions
 
 ## 1.3.0 (2017-10-05)
 

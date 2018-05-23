@@ -177,13 +177,11 @@ def rate_limiting(func):
             try:
                 return func(*args, **kwargs)
             except FacebookRequestError as e:
-                # Deal with rate limiting error
-                # https://developers.facebook.com/docs/marketing-api/api-rate-limiting
-                if e.api_error_code() == 17 and number_of_attempts < 7:
+                if number_of_attempts < 7:
                     duration = 60 * 2 ** number_of_attempts
-                    logging.warning('Hit rate limiting. Retry #{attempt} in {duration} seconds'
-                                    .format(attempt=number_of_attempts,
-                                            duration=duration))
+                    logging.warning(e.get_message())
+                    logging.info('Retry #{attempt} in {duration} seconds'.format(attempt=number_of_attempts,
+                                                                                 duration=duration))
                     time.sleep(duration)
                     number_of_attempts += 1
                 else:
