@@ -24,9 +24,11 @@ def download_data():
     ad_accounts = _get_ad_accounts()
     target_accounts = list(filter(None, config.target_accounts().split(',')))
     if len(target_accounts) > 0:
-        logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s', len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
+        logging.info('the app can see %s accounts but the configuration specified only %s target accounts: %s',
+                     len(ad_accounts), len(target_accounts), ', '.join(target_accounts))
         ad_accounts = [ad_account for ad_account in ad_accounts if ad_account['account_id'] in config.target_accounts()]
-        logging.info('after filtering %s accounts will be downloaded: %s', len(target_accounts), ', '.join(target_accounts))
+        logging.info('after filtering %s accounts will be downloaded: %s', len(target_accounts),
+                     ', '.join(target_accounts))
     download_data_sets(ad_accounts)
 
 
@@ -79,7 +81,7 @@ CREATE TABLE IF NOT EXISTS account_structure (
   PRIMARY KEY (ad_id)
 );""")
     con.execute("INSERT OR REPLACE INTO account_structure VALUES (?,?,?,?,?,?,?,?,?)",
-                   campaign_data)
+                campaign_data)
 
 
 def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
@@ -91,7 +93,8 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
 
     """
     for account_index, ad_account in enumerate(ad_accounts):
-        logging.info('Downloading data for account %s (account %d of %d)', ad_account['account_id'], account_index, len(ad_accounts))
+        logging.info('Downloading data for account %s (account %d of %d)', ad_account['account_id'], account_index,
+                     len(ad_accounts))
         # calculate yesterday based on the timezone of the ad account
         ad_account_timezone = datetime.timezone(datetime.timedelta(
             hours=float(ad_account['timezone_offset_hours_utc'])))
@@ -107,7 +110,7 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
                              account_id=ad_account['account_id'])))
 
             if (not db_name.is_file()
-                or (last_date - current_date).days <= int(config.redownload_window())):
+                    or (last_date - current_date).days <= int(config.redownload_window())):
                 ad_insights = get_account_ad_performance_for_single_day(ad_account,
                                                                         current_date)
                 with sqlite3.connect(str(db_name)) as con:
@@ -449,7 +452,7 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
 
         ad_insight_tuple = (ad_insight['date_start'],
                             ad_insight['ad_id'],
-			    ad_insight.get('impression_device') or 'Unknown',
+                            ad_insight.get('impression_device') or 'Unknown',
                             json.dumps(performance))
 
         yield ad_insight_tuple
