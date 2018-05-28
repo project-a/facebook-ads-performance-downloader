@@ -11,6 +11,7 @@ from typing import Generator, List, Union
 
 from facebook_downloader import config
 from facebookads.adobjects import user, adaccount, adsinsights
+from facebookads.adobjects.adreportrun import AdReportRun
 from facebookads.api import FacebookAdsApi, FacebookRequestError
 
 OUTPUT_FILE_VERSION = 'v1'
@@ -57,6 +58,7 @@ def download_account_structure(ad_accounts: [adaccount.AdAccount]):
         for ad_account in ad_accounts:
             for row in download_account_structure_per_account(ad_account):
                 _upsert_account_structure(row, con)
+
 
 def _upsert_account_structure(campaign_data, con: sqlite3.Connection):
     """Creates the campaign performance table if it does not exists and upserts the
@@ -300,37 +302,46 @@ def get_account_ad_performance_for_single_day(ad_account: adaccount.AdAccount,
         ad_account_id=ad_account['account_id'],
         single_date=single_date.strftime('%Y-%m-%d')))
 
-    ad_insights = ad_account.get_insights(
-        # https://developers.facebook.com/docs/marketing-api/insights/fields
-        fields=['date_start',
-                'ad_id',
-                'impressions',
-                'actions',
-                'spend',
-                'action_values'],
-        # https://developers.facebook.com/docs/marketing-api/insights/parameters
-        params={'action_attribution_windows': ['28d_click'],
-                # https://developers.facebook.com/docs/marketing-api/insights/action-breakdowns
-                'action_breakdowns': ['action_type'],
-                # https://developers.facebook.com/docs/marketing-api/insights/breakdowns
-                'breakdowns': ['impression_device'],
-                'level': 'ad',
-                'limit': 1000,
-                'time_range': {'since': single_date.strftime('%Y-%m-%d'),
-                               'until': single_date.strftime('%Y-%m-%d')},
-                # By default only ACTIVE campaigns get considered.
-                'filtering': [{
-                    'field': 'ad.effective_status',
-                    'operator': 'IN',
-                    'value': ['ACTIVE',
-                              'PAUSED',
-                              'PENDING_REVIEW',
-                              'DISAPPROVED',
-                              'PREAPPROVED',
-                              'PENDING_BILLING_INFO',
-                              'CAMPAIGN_PAUSED',
-                              'ARCHIVED',
-                              'ADSET_PAUSED']}]})
+    fields = ['date_start',
+              'ad_id',
+              'impressions',
+              'actions',
+              'spend',
+              'action_values']
+
+    params = {'action_attribution_windows': ['28d_click'],
+              # https://developers.facebook.com/docs/marketing-api/insights/action-breakdowns
+              'action_breakdowns': ['action_type'],
+              # https://developers.facebook.com/docs/marketing-api/insights/breakdowns
+              'breakdowns': ['impression_device'],
+              'level': 'ad',
+              'limit': 1000,
+              'time_range': {'since': single_date.strftime('%Y-%m-%d'),
+                             'until': single_date.strftime('%Y-%m-%d')},
+              # By default only ACTIVE campaigns get considered.
+              'filtering': [{
+                  'field': 'ad.effective_status',
+                  'operator': 'IN',
+                  'value': ['ACTIVE',
+                            'PAUSED',
+                            'PENDING_REVIEW',
+                            'DISAPPROVED',
+                            'PREAPPROVED',
+                            'PENDING_BILLING_INFO',
+                            'CAMPAIGN_PAUSED',
+                            'ARCHIVED',
+                            'ADSET_PAUSED']}]}
+
+    # https://developers.facebook.com/docs/marketing-api/insights/best-practices
+    # https://developers.facebook.com/docs/marketing-api/asyncrequests/
+    async_job = ad_account.get_insights(fields=fields, params=params, async=True)
+    async_job.remote_read()
+    while async_job[AdReportRun.Field.async_percent_completion] < 100:
+        time.sleep(1)
+        async_job.remote_read()
+    time.sleep(1)
+
+    ad_insights = async_job.get_result()
 
     return ad_insights
 
