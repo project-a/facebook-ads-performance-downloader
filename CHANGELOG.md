@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0 (2018-05-28)
+
+- Fix facebook-api 'unknown error' with asynchronous requests
 
 ## 1.4.0 - 1.4.3 (2017-12-28)
 
