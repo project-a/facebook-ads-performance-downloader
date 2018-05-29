@@ -182,6 +182,7 @@ def rate_limiting(func):
                 if number_of_attempts < 7:
                     duration = 60 * 2 ** number_of_attempts
                     logging.warning(e.get_message())
+                    logging.warning(e.api_error_message())
                     logging.info('Retry #{attempt} in {duration} seconds'.format(attempt=number_of_attempts,
                                                                                  duration=duration))
                     time.sleep(duration)
@@ -412,6 +413,7 @@ def _get_ad_accounts() -> [adaccount.AdAccount]:
     return list(ad_accounts)
 
 
+@rate_limiting
 def _upsert_ad_performance(ad_insights: [adsinsights.AdsInsights], con: sqlite3.Connection):
     """Creates the ad performance table if it does not exists and upserts the
     ad insights data afterwards
@@ -433,6 +435,7 @@ CREATE TABLE IF NOT EXISTS ad_performance (
                     _to_insight_row_tuples(ad_insights))
 
 
+@rate_limiting
 def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[tuple, None, None]:
     """Transforms the Insights objects into tuples that can be directly inserted
     into the ad_performance table
@@ -444,15 +447,21 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
         A list of tuples of ad performance data
 
     """
+
+    @rate_limiting
+    def get_ad_insight(field, ad_insight, default_value=[]):
+        return ad_insight.get(field) or default_value
+
     for ad_insight in ad_insights:
-        actions = ad_insight.get('actions') or []
+        actions = get_ad_insight('actions', ad_insight)
+
         actions = [_floatify_values(action) for action in actions]
 
-        action_values = ad_insight.get('action_values') or []
+        action_values = get_ad_insight('action_values', ad_insight)
         action_values = [_floatify_values(action_value) for action_value in action_values]
 
-        impressions = ad_insight.get('impressions') or 0
-        spend = ad_insight.get('spend') or 0.0
+        impressions = get_ad_insight('impressions', ad_insight, 0)
+        spend = get_ad_insight('spend', ad_insight, 0.0)
 
         performance = {'impressions': int(impressions),
                        'spend': float(spend),
@@ -461,7 +470,7 @@ def _to_insight_row_tuples(ad_insights: [adsinsights.AdsInsights]) -> Generator[
 
         ad_insight_tuple = (ad_insight['date_start'],
                             ad_insight['ad_id'],
-                            ad_insight.get('impression_device') or 'Unknown',
+                            get_ad_insight('impression_device', ad_insight, 'Unknown'),
                             json.dumps(performance))
 
         yield ad_insight_tuple
