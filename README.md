@@ -102,6 +102,11 @@ The generated `access_token` is then shown to you:
 
 Currently Facebook requires you to perform a number of successful API calls before being able to access more than 5 accounts. If that's the case use the `target_accounts` parameter to specify these 5 accounts and avoid API errors.
 
+### Refresh API Token
+Facebook invalidates the API token once every couple of months. To refresh it, go to `https://developers.facebook.com/tools/explorer/<YOUR_APP_ID>`:
+![Facebook API Token Refresh](docs/facebook-system-user-token-refresh.png)
+Click on `Get User Access Token`, select `read_insights` and `ads_read`, and generate the new token, which will appear in the line next to the button pressed on the screenshot. This will generate a short-lived access token. To extend it, go to `https://developers.facebook.com/tools/debug/accesstoken/?access_token=<GENERATED_SHORT_LIVED_TOKEN>` (or click on the (i)nformation icon next to the token and choose _Open in Access Token Tool_) and click on _Extend Access Token_ button. The new long-lived access token will be displayed below.
+
 ## Usage
 
 To run the Facebook Ads Performance Downloader call `download-facebook-performance-data` with its config parameters:  
