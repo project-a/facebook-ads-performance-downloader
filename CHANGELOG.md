@@ -1,8 +1,10 @@
 # Changelog
 
-## 1.5.0 - 1.5.1 (2018-05-29)
+## 1.5.0 - 1.5.2 (2018-05-29)
 
 - Fix facebook-api request and rate limit issues with asynchronous requests
+- Add check for 'Job Failed' status
+- Describe how to refresh the API token
 
 ## 1.4.0 - 1.4.3 (2017-12-28)
 
