@@ -9,7 +9,8 @@ setup(
     install_requires=[
         'facebookads==2.11.3',
         'click>=6.0',
-        'wheel>=0.29'
+        'wheel>=0.29',
+        'mara-config>=0.1'
     ],
 
     packages=find_packages(),
