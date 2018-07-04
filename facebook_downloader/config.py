@@ -47,3 +47,7 @@ def redownload_window() -> str:
 def target_accounts() -> str:
     """The accounts to download, comma separated, if empty each available account will be tried"""
     return ''
+
+def number_of_ad_performance_threads() -> str:
+    """The number of threads used to download ad performance"""
+    return '10'
