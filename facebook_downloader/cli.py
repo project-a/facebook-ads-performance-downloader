@@ -28,6 +28,7 @@ def apply_options(kwargs):
 @config_option(config.first_date)
 @config_option(config.redownload_window)
 @config_option(config.target_accounts)
+@config_option(config.number_of_ad_performance_threads)
 def download_data(**kwargs):
     """
     Downloads data.

@@ -49,7 +49,12 @@ def target_accounts() -> str:
     return ''
 
 
-def action_attribution_windows() -> str:
+def action_attribution_windows() -> [str]:
     """The action attribution windows parameter. Default as '28d_click'
     https://developers.facebook.com/docs/marketing-api/insights/#sample"""
     return ['28d_click']
+
+
+def number_of_ad_performance_threads() -> str:
+    """The number of threads used to download ad performance"""
+    return '10'
