@@ -47,3 +47,9 @@ def redownload_window() -> str:
 def target_accounts() -> str:
     """The accounts to download, comma separated, if empty each available account will be tried"""
     return ''
+
+
+def action_attribution_windows() -> str:
+    """The action attribution windows parameter. Default as '28d_click'
+    https://developers.facebook.com/docs/marketing-api/insights/#sample"""
+    return ['28d_click']
