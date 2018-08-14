@@ -93,8 +93,26 @@ CREATE TABLE IF NOT EXISTS account_structure (
 
 
 def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
-    """Download the Facebook ad performance and upserts them
+    """In parallel downloads the Facebook ad performance and upserts them
     into a sqlite database per account and day
+
+    Some words about the implementation. Before anything happens a job queue is
+    created for all the download requests that need to happen. This queue is sorted
+    by try_count and date (both descending). Threads just pick the top item from
+    the job queue and process it accordingly. This could lead to some heavy
+    contention if you specify a crazy amount of threads and your downloads finish
+    quite fast. I however did not find a need to let threads grab a whole chunk of
+    jobs at once, especially since jobs can be re-added to the queue. If a job
+    fails it will be added to a retry queue (sorted by retry_date ascending), a
+    single thread will pop this queue after waiting the specified amount of time
+    and will re-add the job back into to job queue. Due to the aforementioned
+    ordering of this queue failed jobs get increasing priority over other jobs
+    based on their try_count.
+
+    Note: this is implemented using threading, this does mean it is not quite
+    parallel due to the global interpreter lock that is present in Python. How ever
+    is should not matter too much here, since all of the downloading is IO bound
+    rather than CPU bound.
 
     Args:
         ad_accounts: A list of all ad accounts to download.
