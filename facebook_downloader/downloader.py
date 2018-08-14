@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import Generator, List, Union
 
 from facebook_downloader import config
-from facebookads.adobjects import user, adaccount, adsinsights
-from facebookads.adobjects.adreportrun import AdReportRun
-from facebookads.api import FacebookAdsApi, FacebookRequestError
+from facebook_business.adobjects import user, adaccount, adsinsights
+from facebook_business.adobjects.adreportrun import AdReportRun
+from facebook_business.api import FacebookAdsApi, FacebookRequestError
 
-OUTPUT_FILE_VERSION = 'v1'
+OUTPUT_FILE_VERSION = 'v2'
 
 
 def download_data():
@@ -51,7 +51,7 @@ def download_account_structure(ad_accounts: [adaccount.AdAccount]):
         ad_accounts: A list of all ad accounts to download.
 
     """
-    db_name = Path('facebook-account-structure_{}.sqlite3'.format(OUTPUT_FILE_VERSION))
+    db_name = Path('facebook-account-structure-{}.sqlite3'.format(OUTPUT_FILE_VERSION))
     filepath = ensure_data_directory(db_name)
 
     with sqlite3.connect(str(filepath)) as con:
@@ -107,8 +107,9 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
         current_date = last_date
         while current_date >= first_date:
             db_name = ensure_data_directory(
-                Path("{date:%Y/%m/%d}/facebook/ad-performance-act_{account_id}.sqlite3"
+                Path("{date:%Y/%m/%d}/facebook/ad-performance-act-{account_id}-{output_file_version}.sqlite3"
                      .format(date=current_date,
+                             output_file_version=OUTPUT_FILE_VERSION,
                              account_id=ad_account['account_id'])))
 
             if (not db_name.is_file()

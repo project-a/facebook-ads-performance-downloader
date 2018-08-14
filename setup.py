@@ -7,7 +7,7 @@ setup(
     description=("Downloads data from the Facebook Ads API to local files"),
 
     install_requires=[
-        'facebookads==2.11.3',
+        'facebook_business==3.0.0',
         'click>=6.0',
         'wheel>=0.29'
     ],
