@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0 (2018-08-14)
+
+- Switch to current Facebook API version (3.0.0)
+- Parallelize ad performance download
+- Unify output file names, bump version to 'v2'
+
+**required changes**
+
+- Adapt ETL to new output file names
+
+
 ## 1.5.0 - 1.5.3 (2018-07-24)
 
 - Fix facebook-api request and rate limit issues with asynchronous requests

@@ -7,8 +7,8 @@ By default, it creates two data sets:
 
 1. **Ad Performance** consists of measures such as impressions, clicks, conversions and spend. The script creates one sqlite3 database per day and ad account in a specified time range:
 
-        data/2017/01/01/facebook/ad-performance-act_1234567890.sqlite3
-        data/2017/01/02/facebook/ad-performance-act_1234567890.sqlite3
+        data/2017/01/01/facebook/ad-performance-act-1234567890-v2.sqlite3
+        data/2017/01/02/facebook/ad-performance-act-1234567890-v2.sqlite3
 
     For the last 28 days, the script always redownloads the files as data still changes (e.g spend or attributed conversions). Beyond that, files are only downloaded for dates where the ad account existed but the file is missing. 
     **Note**: If you are using an attribution window larger than 28 days adjust the `redownload_window` config accordingly.
@@ -35,7 +35,7 @@ By default, it creates two data sets:
     
 2. **Account Structure** information. This sqlite3 database containes one table `account_structure` which is always upserted by the script:
 
-        data/facebook-account-structure_v1.sqlite3
+        data/facebook-account-structure-v2.sqlite3
 
     Each rows contains one ad together with its ad group, campaign and account:
     
@@ -72,7 +72,7 @@ Optionally, you can apply labels on all hierarchy levels for segmenting the stru
  The Facebook Ads Performance Downloader requires:
 
     Python (>= 3.5)
-    facebookads (==2.11.1)
+    facebook_business (==3.0.0)
     click (>=6.0)
 
 The easiest way to install facebook-ads-downloader is using pip
@@ -152,5 +152,7 @@ For all options, see
       --target_accounts TEXT    The accounts to download, comma separated, if not
                                 set or empty each available account will be tried.
                                 Example: ""
-
+      --number_of_ad_performance_threads TEXT
+                                The number of threads used to download ad
+                                performance. Example: "10"
       --help                    Show this message and exit.
