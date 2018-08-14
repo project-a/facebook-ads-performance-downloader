@@ -140,7 +140,7 @@ def download_ad_performance(ad_accounts: [adaccount.AdAccount]):
                 job_list.append(JobQueueItem(ad_account['account_id'], current_date, str(db_name)))
             current_date -= datetime.timedelta(days=1)
 
-    process_single_day_jobs_concurrently(job_list, int(config.number_of_ad_performance_threads()))
+    _process_single_day_jobs_concurrently(job_list, int(config.number_of_ad_performance_threads()))
 
 
 def download_account_structure_per_account(ad_account: adaccount.AdAccount) \
@@ -578,20 +578,20 @@ class ThreadArgs:
         self.done: bool = False
 
 
-def process_single_day_jobs_concurrently(job_list: typing.List[JobQueueItem], n_threads: int) -> None:
+def _process_single_day_jobs_concurrently(job_list: typing.List[JobQueueItem], n_threads: int) -> None:
     if n_threads < 1:
-        raise ValueError('process_single_day_jobs_concurrently should have n_threads > 0')
+        raise ValueError('_process_single_day_jobs_concurrently should have n_threads > 0')
     heapq.heapify(job_list)
     thread_args: ThreadArgs = ThreadArgs(job_list)
     # store the default API since the worker threads will change it
     default_api: FacebookAdsApi = FacebookAdsApi.get_default_api()
 
     thread_list: typing.List[threading.Thread] = list()
-    thread: threading.Thread = threading.Thread(target=retry_thread_func, args=(thread_args,))
+    thread: threading.Thread = threading.Thread(target=_retry_thread_func, args=(thread_args,))
     thread_list.append(thread)
     thread.start()
     for i in range(0, n_threads):
-        thread = threading.Thread(target=job_thread_func, args=(thread_args,))
+        thread = threading.Thread(target=_job_thread_func, args=(thread_args,))
         thread_list.append(thread)
         thread.start()
 
@@ -623,7 +623,7 @@ def process_single_day_jobs_concurrently(job_list: typing.List[JobQueueItem], n_
         sys.exit(1)
 
 
-def job_thread_func(args: ThreadArgs) -> None:
+def _job_thread_func(args: ThreadArgs) -> None:
     job: typing.Optional[JobQueueItem]
     # Api objects do not seem thread safe at all, create on per thread and nuke the default for
     # good measure
@@ -635,16 +635,16 @@ def job_thread_func(args: ThreadArgs) -> None:
     # iteration. Also assignment / reading of booleans should be atomic anyway.
     while not args.done:
 
-        job = get_job_from_queue(args)
+        job = _get_job_from_queue(args)
         if job is None:
             continue
 
-        process_job(args, job, api)
+        _process_job(args, job, api)
 
-    log(logging.info, args.logging_mutex, ['thread {0} exited'.format(threading.get_ident())])
+    _log(logging.info, args.logging_mutex, ['thread {0} exited'.format(threading.get_ident())])
 
 
-def get_job_from_queue(args: ThreadArgs) -> typing.Optional[JobQueueItem]:
+def _get_job_from_queue(args: ThreadArgs) -> typing.Optional[JobQueueItem]:
     with args.job_list_cv:
         # wait for a job to become available
         while len(args.job_list) <= 0:
@@ -656,13 +656,13 @@ def get_job_from_queue(args: ThreadArgs) -> typing.Optional[JobQueueItem]:
         return heapq.heappop(args.job_list)
 
 
-def process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> None:
+def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> None:
     account_id: str = job.ad_account_id
     date_str: str = job.date.strftime('%Y-%m-%d')
     job.try_count += 1
     job_info_str: str = 'act_{ad_account_id} on {single_date}'.format(ad_account_id=account_id,
                                                                       single_date=date_str)
-    log(logging.info, args.logging_mutex, ['download Facebook ad performance of {job}'
+    _log(logging.info, args.logging_mutex, ['download Facebook ad performance of {job}'
                                            ' - attempt #{attempt}'.format(job=job_info_str, attempt=job.try_count)])
 
     # platform specific timer
@@ -680,7 +680,7 @@ def process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> Non
 
         end = timeit.default_timer()
 
-        log(logging.info, args.logging_mutex, ['finished download Facebook ad performance of {job}'
+        _log(logging.info, args.logging_mutex, ['finished download Facebook ad performance of {job}'
                                                ' in {time}s - attempt #{attempt}'.format(job=job_info_str,
                                                                                          time=round(end - start, 2),
                                                                                          attempt=job.try_count)])
@@ -709,14 +709,14 @@ def process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> Non
             with args.retry_queue_cv:
                 heapq.heappush(args.retry_queue, RetryQueueItem(retry_at, job))
                 args.retry_queue_cv.notify_all()
-            log(logging.warning, args.logging_mutex, error_msg)
+            _log(logging.warning, args.logging_mutex, error_msg)
             return
         else:
             error_occured = True
             error_msg.append('download of {job} failed too many times'.format(job=job_info_str))
 
     if error_occured:
-        log(logging.error, args.logging_mutex, error_msg)
+        _log(logging.error, args.logging_mutex, error_msg)
 
         with args.state_changed_cv:
             # technically does not require locking but it is needed for the notify to work
@@ -728,7 +728,7 @@ def process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> Non
         return
 
 
-def retry_thread_func(args: ThreadArgs) -> None:
+def _retry_thread_func(args: ThreadArgs) -> None:
     # locking outside the main loop is fine here, since wait will relinquish the lock
     with args.retry_queue_cv:
         while not args.done:
@@ -756,8 +756,8 @@ def retry_thread_func(args: ThreadArgs) -> None:
             args.retry_queue_cv.wait(wait_timeout)
 
 
-def log(log_func: typing.Callable[[str], None], logging_mutex: threading.Lock,
-        log_strs: typing.List[str]):
+def _log(log_func: typing.Callable[[str], None], logging_mutex: threading.Lock,
+         log_strs: typing.List[str]):
     with logging_mutex:
         for log_str in log_strs:
             log_func(log_str)
