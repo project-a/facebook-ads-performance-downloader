@@ -710,6 +710,9 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
                 heapq.heappush(args.retry_queue, RetryQueueItem(retry_at, job))
                 args.retry_queue_cv.notify_all()
             _log(logging.warning, args.logging_mutex, error_msg)
+            # Also sleep. What good is scheduling a job for later when the request quota is exceded and the API still gets bombarded
+            # with uninterrupted requests?
+            time.sleep(duration)
             return
         else:
             error_occured = True
