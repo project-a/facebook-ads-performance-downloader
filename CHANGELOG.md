@@ -1,10 +1,11 @@
 # Changelog
 
-## 2.0.0 (2018-08-14)
+## 2.0.0 - 2.0.1 (2018-09-27)
 
 - Switch to current Facebook API version (3.0.0)
 - Parallelize ad performance download
 - Unify output file names, bump version to 'v2'
+- Fix API bug "2601" on handling async requests
 
 **required changes**
 
