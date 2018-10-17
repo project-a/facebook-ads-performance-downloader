@@ -2,6 +2,8 @@
 
 A Python script for downloading structure and performance data from ad accounts in a single [business manager](https://developers.facebook.com/docs/apps/business-manager) using the Facebook Ads API ([v2.11](https://developers.facebook.com/docs/marketing-api/reference/v2.11)) to local files. 
 
+The [mara Facebook ads performance pipeline](https://github.com/mara/facebook-ads-performance-pipeline) can be, then, used for loading and transforming the downloaded data into a dimensional schema.
+
 ## Resulting data
 By default, it creates two data sets:
 
