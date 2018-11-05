@@ -669,6 +669,7 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
     start = timeit.default_timer()
 
     request_error_occured: bool = False
+    request_error_is_rate_limit: bool = False
     error_occured: bool = False
     error_msg: typing.List[str] = list()
     ad_insights: adsinsights.AdsInsights
@@ -692,6 +693,8 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
 
     except FacebookRequestError as e:
         request_error_occured = True
+        # This is the error details of a rate limiting error. The message is "User request limit reached"
+        request_error_is_rate_limit = e.api_error_type() == 'OAuthException' and e.api_error_code() == 17
         error_msg.append(e.get_message())
         error_msg.append(e.api_error_message())
     except Exception as e:
@@ -710,9 +713,11 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
                 heapq.heappush(args.retry_queue, RetryQueueItem(retry_at, job))
                 args.retry_queue_cv.notify_all()
             _log(logging.warning, args.logging_mutex, error_msg)
-            # Also sleep. What good is scheduling a job for later when the request quota is exceded and the API still gets bombarded
-            # with uninterrupted requests?
-            time.sleep(duration)
+            if request_error_is_rate_limit:
+                # If the error was caused by rate limiting, sleep here to block the worker.
+                # Otherwise FB will keep being bombarded by uninterrupted requests constantly hitting the rate limit.
+                # Don't block execution otherwise (if it's not this particular error).
+                time.sleep(duration)
             return
         else:
             error_occured = True
