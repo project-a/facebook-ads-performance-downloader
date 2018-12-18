@@ -1,6 +1,6 @@
 # Facebook Ads Performance Downloader
 
-A Python script for downloading structure and performance data from ad accounts in a single [business manager](https://developers.facebook.com/docs/apps/business-manager) using the Facebook Ads API ([v2.11](https://developers.facebook.com/docs/marketing-api/reference/v2.11)) to local files. 
+A Python script for downloading structure and performance data from ad accounts in a single [business manager](https://developers.facebook.com/docs/apps/business-manager) using the Facebook Ads API ([v3.2](https://developers.facebook.com/docs/marketing-api/reference/v3.2)) to local files. 
 
 The [mara Facebook ads performance pipeline](https://github.com/mara/facebook-ads-performance-pipeline) can be, then, used for loading and transforming the downloaded data into a dimensional schema.
 
@@ -15,7 +15,7 @@ By default, it creates two data sets:
     For the last 28 days, the script always redownloads the files as data still changes (e.g spend or attributed conversions). Beyond that, files are only downloaded for dates where the ad account existed but the file is missing. 
     **Note**: If you are using an attribution window larger than 28 days adjust the `redownload_window` config accordingly.
     
-    The resulting sqlite3 databases contain a single table `ad_performance`, with individual rows per ad and the device and placement breakdown. See [Insights Breakdowns](https://developers.facebook.com/docs/marketing-api/insights/breakdowns/v2.11) for a documentation of the breakdown. The performance data is stored in JSON format in a single column
+    The resulting sqlite3 databases contain a single table `ad_performance`, with individual rows per ad and the device and placement breakdown. See [Insights Breakdowns](https://developers.facebook.com/docs/marketing-api/insights/breakdowns/v3.2) for a documentation of the breakdown. The performance data is stored in JSON format in a single column
 
         date        | 2017-01-01
         ad_id       | 1234567890

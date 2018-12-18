@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2 (2018-12-18)
+- Switch to current Facebook API version (3.2.4)
+  - Fix python3.7 compatibility (usage of `async` as variable name)
+
 ## 2.0.0 - 2.0.1 (2018-09-27)
 
 - Switch to current Facebook API version (3.0.0)
