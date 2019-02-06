@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 import timeit
+import traceback
 import typing
 from functools import wraps
 from pathlib import Path
@@ -353,7 +354,7 @@ def get_account_ad_performance_for_single_day(ad_account: adaccount.AdAccount,
 
     # https://developers.facebook.com/docs/marketing-api/insights/best-practices
     # https://developers.facebook.com/docs/marketing-api/asyncrequests/
-    async_job = ad_account.get_insights(fields=fields, params=params, async=True)
+    async_job = ad_account.get_insights(fields=fields, params=params, is_async=True)
     async_job.remote_read()
     while async_job[AdReportRun.Field.async_percent_completion] < 100 or async_job[
         AdReportRun.Field.async_status] != 'Job Completed':
@@ -566,16 +567,23 @@ class ThreadArgs:
         self.job_list: typing.List[JobQueueItem] = job_list
         self.retry_queue: typing.List[RetryQueueItem] = list()
         self.jobs_left = len(job_list)
+        self.job_thread_done = False
+        self.retry_thread_done = False
 
-        # both cvs do no require the same mutex, but it is slightly more convenient than using
-        # events and manually locking where needed
+        # job_list_cv protects:
+        # - job_list
+        # - job_thread_done
         self.job_list_cv: threading.Condition = threading.Condition()
+        # state_changed_cv protects:
+        # - error_occured
+        # - jobs_left
         self.state_changed_cv: threading.Condition = threading.Condition()
-
+        # retry_queue_cv protects:
+        # - retry_queue
+        # - retry_thread_done
         self.retry_queue_cv: threading.Condition = threading.Condition()
         self.logging_mutex: threading.Lock = threading.Lock()
         self.error_occured: bool = False
-        self.done: bool = False
 
 
 def _process_single_day_jobs_concurrently(job_list: typing.List[JobQueueItem], n_threads: int) -> None:
@@ -602,13 +610,16 @@ def _process_single_day_jobs_concurrently(job_list: typing.List[JobQueueItem], n
     except:
         thread_args.error_occured = True
     finally:
-        thread_args.done = True
         thread_args.state_changed_cv.release()
         # notify all waiting threads, so they can see that they are done
         # release -> aquire ordering matters due to potential deadlocking
+        # use a second variable to identify a done variable
+        # that requires only a single lock rather than all three
         with thread_args.job_list_cv:
+            thread_args.job_thread_done = True
             thread_args.job_list_cv.notify_all()
         with thread_args.retry_queue_cv:
+            thread_args.retry_thread_done = True
             thread_args.retry_queue_cv.notify()
 
     with thread_args.logging_mutex:
@@ -631,29 +642,18 @@ def _job_thread_func(args: ThreadArgs) -> None:
                                               config.app_secret(),
                                               config.access_token())
     FacebookAdsApi.set_default_api(None)
-    # No need to lock since this can only change to True, so  worst case this does one extra
-    # iteration. Also assignment / reading of booleans should be atomic anyway.
-    while not args.done:
+    with args.job_list_cv:
+        while not args.job_thread_done:
 
-        job = _get_job_from_queue(args)
-        if job is None:
-            continue
-
-        _process_job(args, job, api)
+            if len(args.job_list) > 0:
+                job = heapq.heappop(args.job_list)
+                args.job_list_cv.release()
+                _process_job(args, job, api)
+                args.job_list_cv.acquire()
+            else:
+                args.job_list_cv.wait()
 
     _log(logging.info, args.logging_mutex, ['thread {0} exited'.format(threading.get_ident())])
-
-
-def _get_job_from_queue(args: ThreadArgs) -> typing.Optional[JobQueueItem]:
-    with args.job_list_cv:
-        # wait for a job to become available
-        while len(args.job_list) <= 0:
-            args.job_list_cv.wait()
-            # check if everything is done in order to avoid infinite loops when no new
-            # jobs are added to the queue
-            if (args.done):
-                return None
-        return heapq.heappop(args.job_list)
 
 
 def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> None:
@@ -669,6 +669,7 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
     start = timeit.default_timer()
 
     request_error_occured: bool = False
+    request_error_is_rate_limit: bool = False
     error_occured: bool = False
     error_msg: typing.List[str] = list()
     ad_insights: adsinsights.AdsInsights
@@ -692,11 +693,13 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
 
     except FacebookRequestError as e:
         request_error_occured = True
+        # This is the error details of a rate limiting error. The message is "User request limit reached"
+        request_error_is_rate_limit = e.api_error_type() == 'OAuthException' and e.api_error_code() == 17
         error_msg.append(e.get_message())
         error_msg.append(e.api_error_message())
     except Exception as e:
         error_occured = True
-        error_msg.append(str(e))
+        error_msg.append(traceback.format_exc())
 
     if request_error_occured:
         if job.try_count < 8:
@@ -710,6 +713,11 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
                 heapq.heappush(args.retry_queue, RetryQueueItem(retry_at, job))
                 args.retry_queue_cv.notify_all()
             _log(logging.warning, args.logging_mutex, error_msg)
+            if request_error_is_rate_limit:
+                # If the error was caused by rate limiting, sleep here to block the worker.
+                # Otherwise FB will keep being bombarded by uninterrupted requests constantly hitting the rate limit.
+                # Don't block execution otherwise (if it's not this particular error).
+                time.sleep(duration)
             return
         else:
             error_occured = True
@@ -731,7 +739,7 @@ def _process_job(args: ThreadArgs, job: JobQueueItem, api: FacebookAdsApi) -> No
 def _retry_thread_func(args: ThreadArgs) -> None:
     # locking outside the main loop is fine here, since wait will relinquish the lock
     with args.retry_queue_cv:
-        while not args.done:
+        while not args.retry_thread_done:
             wait_timeout: typing.Optional[float] = None
             if len(args.retry_queue) > 0:
                 now: datetime.datetime = datetime.datetime.now()
