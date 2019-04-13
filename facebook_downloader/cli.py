@@ -11,7 +11,7 @@ def config_option(config_function):
     """Helper decorator that turns an option function into a cli option"""
     return (lambda function: click.option('--' + config_function.__name__,
                                           help=config_function.__doc__.strip() + '. Example: "' +
-                                               config_function() + '"')(function))
+                                               str(config_function()) + '"')(function))
 
 
 def apply_options(kwargs):
