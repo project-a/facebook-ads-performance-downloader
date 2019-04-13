@@ -1,5 +1,12 @@
-from facebook_downloader import config, cli
+"""Make the functionalities of this package auto-discoverable by mara-app"""
 
-MARA_CONFIG_MODULES = [config]
 
-MARA_CLICK_COMMANDS = [cli.download_data]
+def MARA_CONFIG_MODULES():
+    from facebook_downloader import config
+    return [config]
+
+
+def MARA_CLICK_COMMANDS():
+    from facebook_downloader import cli
+
+    return [cli.download_data]

@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0 (2019-04-13)
+
+- Change MARA_XXX variables to functions to delay importing of imports
+
+**required changes** 
+
+- If used together with a mara project, Update `mara-app` to `>=2.0.0`
+
+
 ## 2.1.0 (2019-02-06)
 - Switch to current Facebook API version (3.2.4)
   - Fix python3.7 compatibility (usage of `async` as variable name)
