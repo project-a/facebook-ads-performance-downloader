@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1 (2019-08-20)
+- Switch to current Facebook API version (4.0.2) 
+- Replaced deprecated function remote_read with api_get
+
 ## 3.0.0 (2019-04-13)
 
 - Change MARA_XXX variables to functions to delay importing of imports

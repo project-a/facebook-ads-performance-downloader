@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='facebook-ads-performance-downloader',
-    version='3.0.0',
+    version='3.0.1',
 
     description=("Downloads data from the Facebook Ads API to local files"),
 
