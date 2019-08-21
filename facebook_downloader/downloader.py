@@ -355,11 +355,11 @@ def get_account_ad_performance_for_single_day(ad_account: adaccount.AdAccount,
     # https://developers.facebook.com/docs/marketing-api/insights/best-practices
     # https://developers.facebook.com/docs/marketing-api/asyncrequests/
     async_job = ad_account.get_insights(fields=fields, params=params, is_async=True)
-    async_job.remote_read()
+    async_job.api_get()
     while async_job[AdReportRun.Field.async_percent_completion] < 100 or async_job[
         AdReportRun.Field.async_status] != 'Job Completed':
         time.sleep(1)
-        async_job.remote_read()
+        async_job.api_get()
     time.sleep(1)
 
     ad_insights = async_job.get_result()
