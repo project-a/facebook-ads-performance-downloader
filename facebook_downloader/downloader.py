@@ -21,7 +21,7 @@ from facebook_business.api import FacebookAdsApi, FacebookRequestError
 
 from facebook_downloader import config
 
-OUTPUT_FILE_VERSION = 'v3'
+OUTPUT_FILE_VERSION = 'v2'
 
 
 def download_data():
