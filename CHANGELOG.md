@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.0 (2020-04-06)
+
+- Switch to current Facebook API version (6.0.0) 
+
+
 ## 3.0.1 (2019-08-20)
 - Switch to current Facebook API version (4.0.2) 
 - Replaced deprecated function remote_read with api_get
