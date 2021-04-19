@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0 (2021-04-19)
+
+- Switch to current Facebook API version (10.0.0)
+
 ## 3.1.0 (2020-04-06)
 
 - Switch to current Facebook API version (6.0.0) 
